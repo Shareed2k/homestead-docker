@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # Laravel homestead original provisioning script
+# Edited by Roman Kredentser
 # https://github.com/laravel/settler
 
 # Update Package List
@@ -20,12 +21,29 @@ sed -i "s/UsePAM.*/UsePAM no/g" /etc/ssh/sshd_config
 sed -i "s/PermitRootLogin.*/PermitRootLogin yes/g" /etc/ssh/sshd_config
 
 # Basic packages
-apt-get install -y sudo software-properties-common nano curl \
+apt-get install -y sudo software-properties-common nano curl ruby-dev openssl \
 build-essential dos2unix gcc git git-flow libmcrypt4 libpcre3-dev apt-utils \
 make python2.7-dev python-pip re2c supervisor unattended-upgrades whois vim zip unzip
 
+# create ssl certificate for nginx 443 port
+mkdir /etc/nginx/ssl
+touch /etc/nginx/ssl/nginx.key
+touch /etc/nginx/ssl/nginx.crt
+openssl req -x509 -newkey rsa:2048 \
+  -subj "/C=XX/ST=XXXX/L=XXXX/O=XXXX/CN=localhost" \
+  -keyout "/etc/nginx/ssl/nginx.key" \
+  -out "/etc/nginx/ssl/nginx.crt" \
+  -days 3650 -nodes
+
+#install compass
+gem install --no-rdoc --no-ri compass
+
 # PPA
 apt-add-repository ppa:ondrej/php -y
+
+## add repository for yarn
+apt-key adv --keyserver pgp.mit.edu --recv D101F7899D41F3C3
+echo "deb http://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
 
 # Update Package Lists
 apt-get update
@@ -91,7 +109,7 @@ echo "xdebug.max_nesting_level = 500" >> /etc/php/7.0/fpm/conf.d/20-xdebug.ini
 phpdismod -s cli xdebug
 
 # Set The Nginx & PHP-FPM User
-sed -i '1 idaemon off;' /etc/nginx/nginx.conf
+#sed -i '1 idaemon off;' /etc/nginx/nginx.conf
 sed -i "s/user www-data;/user homestead;/" /etc/nginx/nginx.conf
 sed -i "s/# server_names_hash_bucket_size.*/server_names_hash_bucket_size 64;/" /etc/nginx/nginx.conf
 
@@ -110,19 +128,22 @@ npm install -g grunt-cli
 npm install -g gulp
 npm install -g bower
 
+# install yarn
+apt-get install -y yarn
+
 # Install SQLite
 apt-get install -y sqlite3 libsqlite3-dev
 
 # Memcached
-apt-get install -y memcached
+#apt-get install -y memcached
 
 # Beanstalkd
-apt-get install -y beanstalkd
-sed -i "s/#START=yes/START=yes/" /etc/default/beanstalkd
+#apt-get install -y beanstalkd
+#sed -i "s/#START=yes/START=yes/" /etc/default/beanstalkd
 
 # Redis
-apt-get install -y redis-server
-sed -i "s/daemonize yes/daemonize no/" /etc/redis/redis.conf
+#apt-get install -y redis-server
+#sed -i "s/daemonize yes/daemonize no/" /etc/redis/redis.conf
 
 # Configure default nginx site
 block="server {
@@ -166,5 +187,7 @@ block="server {
 rm /etc/nginx/sites-enabled/default
 rm /etc/nginx/sites-available/default
 
-cat > /etc/nginx/sites-enabled/default
-echo "$block" > "/etc/nginx/sites-enabled/default"
+cat > /etc/nginx/sites-available/default
+echo "$block" > "/etc/nginx/sites-available/default"
+
+ln -fs /etc/nginx/sites-available/* /etc/nginx/sites-enabled/

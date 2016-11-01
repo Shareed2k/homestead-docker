@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM shincoder/homestead:php7.0
 MAINTAINER Jaouad E. <jaouad.elmoussaoui@gmail.com>
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -13,5 +13,5 @@ RUN chmod +x /*.sh
 
 RUN ./provision.sh
 
-EXPOSE 80 22 35729 9876
+EXPOSE 80 22 8443 8080 35729 9876 9000
 CMD ["/usr/bin/supervisord"]
