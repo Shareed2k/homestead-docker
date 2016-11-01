@@ -1,0 +1,76 @@
+web:
+    build: ./
+    restart: always
+    ports:
+        - "80:80" # web
+        - "2222:22" # ssh
+        - "443:443" # web
+        - "8443:8443" # websocket nginx proxy
+        - "8080:8080" # websocket nginx proxy
+        - "35729:35729" # live reload
+        - "9876:9876" # karma server
+        - "9000:9000" # xdebug 
+    environment:
+        PHP_XDEBUG_ENABLED: 1 # Set 1 to enable.
+        XDEBUG_CONFIG: remote_host=10.254.254.254
+    volumes:
+        - ~/.composer:/home/homestead/.composer # composer caching
+        - ~/.gitconfig:/home/homestead/.gitconfig # Git configuration ( access alias && config )
+        - ~/.ssh:/home/homestead/.ssh # Ssh keys for easy deployment inside the container
+        - ~/apps:/apps # all apps
+        - ~/apps/volumes/nginx/sites-available:/etc/nginx/sites-available # nginx sites ( in case you recreate the container )
+        - ~/apps/volumes/nginx/sites-enabled:/etc/nginx/sites-enabled # nginx sites ( in case you recreate the container )
+    links:
+        - postgres
+        - websocket
+
+### PostgreSQL Container ####################################
+
+postgres:
+    image: postgres:latest
+    volumes:
+        - ~/apps/volumes/postgres:/var/lib/postgresql/data # database files
+    ports:
+        - "5432:5432"
+    environment:
+        POSTGRES_DB: homestead
+        POSTGRES_USER: homestead
+        POSTGRES_PASSWORD: secret
+
+### Socket.io Server Container ##############################
+
+websocket:
+    build: ./websocket
+    links:
+        - redis
+    volumes:
+        - ./websocket/socket.server.js:/srv/socket.js
+        - ~/apps/logs/websocket:/srv/logs
+    expose:
+        - "3000"
+
+### Redis Container #########################################
+
+redis:
+    image: redis:latest
+    volumes:
+        - ~/apps/volumes/redis:/data
+    ports:
+        - "6379:6379"
+
+### Memcached Container #####################################
+
+memcached:
+    image: memcached:latest
+    volumes:
+        - ~/apps/volumes/memcached:/var/lib/memcached
+    ports:
+        - "11211:11211"
+
+### Beanstalkd Container ####################################
+
+beanstalkd:
+    image: schickling/beanstalkd:latest
+    ports:
+        - "11300:11300"
+    privileged: true
