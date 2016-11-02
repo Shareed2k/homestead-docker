@@ -7,7 +7,6 @@ web:
         - "443:443" # web
         - "8443:8443" # websocket nginx proxy
         - "8080:8080" # websocket nginx proxy
-        - "35729:35729" # live reload
         - "9876:9876" # karma server
         - "9000:9000" # xdebug 
     environment:
@@ -23,6 +22,7 @@ web:
     links:
         - postgres
         - websocket
+        - redis
 
 ### PostgreSQL Container ####################################
 
