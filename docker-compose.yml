@@ -1,6 +1,8 @@
 web:
     build: ./
     restart: always
+    expose:
+        - "9000"
     ports:
         - "80:80" # web
         - "2222:22" # ssh
@@ -8,7 +10,6 @@ web:
         - "8443:8443" # websocket nginx proxy
         - "8080:8080" # websocket nginx proxy
         - "9876:9876" # karma server
-        - "9000:9000" # xdebug 
     environment:
         PHP_XDEBUG_ENABLED: 1 # Set 1 to enable.
         XDEBUG_CONFIG: remote_host=10.254.254.254
