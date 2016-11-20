@@ -1,5 +1,5 @@
 web:
-    build: ./
+    image: shareed2k/homestead:1.0
     restart: always
     expose:
         - "9000"
